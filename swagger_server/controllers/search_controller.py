@@ -1,9 +1,10 @@
 import connexion
 import six
+import requests
 
 from swagger_server.models.hits import Hits  # noqa: E501
 from swagger_server import util
-
+from swagger_server.external_apis.py_edamam import Edamam
 
 def search(query, _from=None, to=None):  # noqa: E501
     """Finds recipes by query
@@ -19,7 +20,8 @@ def search(query, _from=None, to=None):  # noqa: E501
 
     :rtype: Hits
     """
-    return 'do some magic!'
+    e = Edamam()
+    return e.search_recipe(query)
 
 
 def search_by_ingredient(ingr):  # noqa: E501
@@ -32,7 +34,15 @@ def search_by_ingredient(ingr):  # noqa: E501
 
     :rtype: Hits
     """
-    return 'do some magic!'
+    url = 'http://www.recipepuppy.com/api/?i=' + ",".join(ingr)
+
+    r = requests.get(url).json()
+    if len(r["results"]) == 0:
+        pass
+    result = Hits(q=ingr, count=len(r["results"]), hits=[])
+    for i in r["results"]:
+        result.hits.append(search(i["title"]))
+    return result
 
 
 def search_by_shopping_list(body):  # noqa: E501
