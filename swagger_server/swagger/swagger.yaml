@@ -1,0 +1,328 @@
+openapi: 3.0.0
+info:
+  title: FoodAPI
+  description: |
+    A service composition in order to make food recipe stuff easier!
+  contact:
+    name: S. A. Mirferdos
+    email: alimirferdos@yahoo.com
+  version: 1.0.0
+servers:
+- url: /
+tags:
+- name: search
+paths:
+  /search:
+    get:
+      tags:
+      - search
+      summary: Finds recipes by query
+      operationId: search
+      parameters:
+      - name: query
+        in: query
+        description: Query values that need to be considered for filter
+        required: true
+        style: form
+        explode: true
+        schema:
+          type: string
+          example: chicken
+      - name: from
+        in: query
+        description: First result index. The maximum value of the “from” parameter
+          is limitted by the number of results a plan is entitled to.
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: integer
+          example: 20
+          default: 0
+      - name: to
+        in: query
+        description: Last result index (exclusive)
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: integer
+          example: 30
+          default: 10
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/hits'
+        "404":
+          description: NOT FOUND
+      x-openapi-router-controller: swagger_server.controllers.search_controller
+  /search/findByIngredients:
+    get:
+      tags:
+      - search
+      summary: Finds recipes by ingredients
+      operationId: search_by_ingredient
+      parameters:
+      - name: ingr
+        in: query
+        required: true
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/hits'
+        "404":
+          description: NOT FOUND
+      x-openapi-router-controller: swagger_server.controllers.search_controller
+  /search/findByShoppingList:
+    post:
+      tags:
+      - search
+      summary: Finds recipes by shopping list
+      operationId: search_by_shopping_list
+      requestBody:
+        content:
+          image/png:
+            schema:
+              type: string
+              format: binary
+        required: true
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/hits'
+        "404":
+          description: NOT FOUND
+      x-openapi-router-controller: swagger_server.controllers.search_controller
+components:
+  schemas:
+    hits:
+      type: object
+      properties:
+        q:
+          type: string
+          description: Query text, as submitted
+        from:
+          type: integer
+          description: First result index, as submitted
+        to:
+          type: integer
+          description: Last result index, as submitted
+        count:
+          type: integer
+          description: Number of results found
+        more:
+          type: boolean
+          description: More than the maximum allowed number of results found
+        hits:
+          type: array
+          description: Matching results (Hit objects)
+          items:
+            $ref: '#/components/schemas/recipe'
+      example:
+        hits:
+        - image: image
+          healthLabels: vegan
+          label: label
+          source: source
+          calories: 5.637377
+          uri: uri
+          url: url
+          totalNutrients:
+          - unit: unit
+            quantity: 9.301444
+            label: label
+          - unit: unit
+            quantity: 9.301444
+            label: label
+          dietLabels: balanced
+          yield: 5
+          totalWeight: 2.302136
+          ingredients:
+          - weight: 7.0614014
+            text: text
+          - weight: 7.0614014
+            text: text
+          totalDaily:
+          - null
+          - null
+        - image: image
+          healthLabels: vegan
+          label: label
+          source: source
+          calories: 5.637377
+          uri: uri
+          url: url
+          totalNutrients:
+          - unit: unit
+            quantity: 9.301444
+            label: label
+          - unit: unit
+            quantity: 9.301444
+            label: label
+          dietLabels: balanced
+          yield: 5
+          totalWeight: 2.302136
+          ingredients:
+          - weight: 7.0614014
+            text: text
+          - weight: 7.0614014
+            text: text
+          totalDaily:
+          - null
+          - null
+        q: q
+        more: true
+        count: 1
+        from: 0
+        to: 6
+    recipe:
+      type: object
+      properties:
+        uri:
+          type: string
+          description: Ontology identifier
+        label:
+          type: string
+          description: Recipe title
+        image:
+          type: string
+          description: Image URL
+        source:
+          type: string
+          description: Source site identifier
+        url:
+          type: string
+          description: Original recipe URL
+        yield:
+          type: integer
+          description: Number of servings
+        calories:
+          type: number
+          description: Total energy, kcal
+          format: float
+        totalWeight:
+          type: number
+          description: Total weight, g
+          format: float
+        ingredients:
+          type: array
+          description: Ingredients list
+          items:
+            $ref: '#/components/schemas/ingredient'
+        totalNutrients:
+          type: array
+          description: Total nutrients for the entire recipe
+          items:
+            $ref: '#/components/schemas/nutrient'
+        totalDaily:
+          type: array
+          description: '% daily value for the entire recipe'
+          items:
+            $ref: '#/components/schemas/nutrient'
+        dietLabels:
+          type: string
+          description: Diet labels (labels are per serving)
+          enum:
+          - balanced
+          - high-protein
+          - high-fiber
+          - low-fat
+          - low-carb
+          - low-sodium
+        healthLabels:
+          type: string
+          description: Health labels (labels are per serving)
+          enum:
+          - vegan
+          - vegetarian
+          - paleo
+          - dairy-free
+          - gluten-free
+          - wheat-free
+          - fat-free
+          - low-sugar
+          - egg-free
+          - peanut-free
+          - tree-nut-free
+          - soy-free
+          - fish-free
+          - shellfish-free
+      example:
+        image: image
+        healthLabels: vegan
+        label: label
+        source: source
+        calories: 5.637377
+        uri: uri
+        url: url
+        totalNutrients:
+        - unit: unit
+          quantity: 9.301444
+          label: label
+        - unit: unit
+          quantity: 9.301444
+          label: label
+        dietLabels: balanced
+        yield: 5
+        totalWeight: 2.302136
+        ingredients:
+        - weight: 7.0614014
+          text: text
+        - weight: 7.0614014
+          text: text
+        totalDaily:
+        - null
+        - null
+    ingredient:
+      type: object
+      properties:
+        text:
+          type: string
+          description: Ingredient's text
+        weight:
+          type: number
+          description: Total weight, g
+          format: float
+      example:
+        weight: 7.0614014
+        text: text
+    nutrient:
+      type: object
+      properties:
+        label:
+          type: string
+          description: Display label
+        quantity:
+          type: number
+          description: Quantity of specified units
+          format: float
+        unit:
+          type: string
+          description: Units
+      example:
+        unit: unit
+        quantity: 9.301444
+        label: label
+  responses:
+    results:
+      description: successful operation
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/hits'
+
