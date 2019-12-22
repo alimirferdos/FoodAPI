@@ -1,10 +1,16 @@
 import connexion
 import six
 import requests
+import tempfile
 
 from swagger_server.models.hits import Hits  # noqa: E501
 from swagger_server import util
 from swagger_server.external_apis.py_edamam import Edamam
+from dotenv import load_dotenv
+load_dotenv()
+import os
+OCR_KEY = os.getenv("OCR_KEY")
+
 
 def search(query, _from=None, to=None):  # noqa: E501
     """Finds recipes by query
@@ -57,4 +63,24 @@ def search_by_shopping_list(body):  # noqa: E501
     """
     if connexion.request.is_json:
         body = Object.from_dict(connexion.request.get_json())  # noqa: E501
-    return 'do some magic!'
+    
+    payload = {'isOverlayRequired': False,
+               'apikey': OCR_KEY,
+               'language': "eng",
+               'iscreatesearchablepdf': False,
+               'issearchablepdfhidetextlayer': False,
+               'filetype': 'png'
+               }
+
+    with open("list.png", "wb") as f:
+        f.write(body)
+
+    with open("list.png", 'rb') as f:
+        r = requests.post(
+            'https://api.ocr.space/parse/image',
+            files={'filename': f},
+            data=payload,
+        )
+
+    # print(response.text)
+    return search_by_ingredient(r.json()['ParsedResults'][0]['ParsedText'].split("\r\n"))
